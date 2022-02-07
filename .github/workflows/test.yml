@@ -30,6 +30,19 @@ jobs:
       run: |
         git submodule update --init --recursive
         python -m pip install --upgrade pip
+        pip install faiss-cpu faiss-gpu
+        cd faiss
+        cmake -B build . -DFAISS_ENABLE_PYTHON=OFF
+        make -C build -j8
+        make -C build install
+        cd ..
+        pip install --no-binary :all: faiss-cpu
+        export FAISS_ENABLE_GPU=ON
+        export FAISS_LDFLAGS='-l:libfaiss.a -l:libopenblas.a -lgfortran -lcudart_static -lcublas_static -lculibos'
+        pip install --no-binary :all: faiss-gpu
+        export FAISS_OPT_LEVEL='avx2'
+        export FAISS_LDFLAGS='-l:libfaiss_avx2.a -l:libopenblas.a -lgfortran'
+        pip install --no-binary :all: faiss-cpu
         python setup.py install
         pip install pytest
     - name: Test with pytest
